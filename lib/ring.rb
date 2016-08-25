@@ -1,8 +1,6 @@
 require 'byebug'
-require 'net/http'
-require 'net/https'
-require 'uri'
 require 'json'
+require 'active_support/core_ext/object/to_param'
 
 class Ring
   def initialize(username:, password:)
@@ -15,39 +13,24 @@ class Ring
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
 
-    headers = {
-      'Accept-Encoding' => 'gzip, deflate',
-      'User-Agent' => 'Dalvik/1.6.0 (Linux; U; Android 4.4.4; Build/KTU84Q)',
-      'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8'
-    }
-
-
-
     post_data = {
-      "device" => {
-        "os" => "andriod",
-        "hardware_id" => "180940d0-7285-3366-8c64-6ea91491982c'",
-        "app_brand" => "ring",
-        "metadata" => {
-        "device_model" => "VirtualBox",
-        "resolution" => "600x800",
-        "app_version" => "1.7.29",
-        "app_instalation_date" => "",
-        "os_version" => "4.4.4",
-        "manufacturer" => "innotek GmbH",
-        "is_tablet" => "true",
-        "linphone_initialized" => "true",
-        "language" => "en"
-      },
+      "device[os]" => "android",
+      "device[hardware_id]" => "hardware_id",
+      "device[app_brand]" => "ring",
+      "device[metadata][device_model]" => "",
+      "device[metadata][resolution]" => "600x800",
+      "device[metadata][app_version]" => "1.7.29",
+      "device[metadata][app_instalation_date]" => "",
+      "device[metadata][os_version]" => "4.4.4",
+      "device[metadata][manufacturer]" => "innotek GmbH",
+      "device[metadata][is_tablet]" => "true",
+      "device[metadata][linphone_initialized]" => "true",
+      "device[metadata][language]" => "en",
       "api_version" => "8"
-      }
     }
 
-
-    post_data = "device%5Bos%5D=android&device%5Bhardware_id%5D=180940d0-7285-3366-8c64-6ea91491982c&device%5Bapp_brand%5D=ring&device%5Bmetadata%5D%5Bdevice_model%5D=VirtualBox&device%5Bmetadata%5D%5Bresolution%5D=600x800&device%5Bmetadata%5D%5Bapp_version%5D=1.7.29&device%5Bmetadata%5D%5Bapp_instalation_date%5D=&device%5Bmetadata%5D%5Bos_version%5D=4.4.4&device%5Bmetadata%5D%5Bmanufacturer%5D=innotek+GmbH&device%5Bmetadata%5D%5Bis_tablet%5D=true&device%5Bmetadata%5D%5Blinphone_initialized%5D=true&device%5Bmetadata%5D%5Blanguage%5D=en&api_version=8"
-
-    request = Net::HTTP::Post.new(uri.path, headers)
-    request.body = post_data
+    request = Net::HTTP::Post.new(uri.path)
+    request.body = post_data.to_param
     request.basic_auth @username, @password
 
 
