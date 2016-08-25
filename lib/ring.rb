@@ -12,22 +12,24 @@ class Ring
   def initialize(username:, password:)
     @username = username
     @password = password
-    @auth_token = nil
+    @authentication_token = nil
   end
 
   def dings
     uri = URI.parse(API_URI + DINGS_ENDPOINT)
-    https = Net::HTTP.new(uri.host, uri.port)
-    https.use_ssl = true
-    post_data = {
+    params = {
       "api_version" => API_VERSION,
-      "auth_token" => @auth_token
+      "auth_token" => @authentication_token
     }
+    encoded_params = URI.encode_www_form(params)
+    http = Net::HTTP.new(uri.host, uri.port)
 
-    request = Net::HTTP::Post.new(uri.path)
-    request.body = post_data.to_param
-    result = https.request request
-    exit unless result.code == "201"
+    request = Net::HTTP::Get.new(uri)
+    result http.request request
+
+    debugger
+    exit unless result.code == "200"
+    puts 'hi'
   end
 
   def authenticate
@@ -58,6 +60,7 @@ class Ring
     result = https.request request
     exit unless result.code == "201"
     authentication_token =  JSON.parse(result.body)["profile"]["authentication_token"]
+    puts "Authenticated"
     @authentication_token = authentication_token
   end
 end
