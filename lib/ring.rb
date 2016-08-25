@@ -1,12 +1,12 @@
-require 'byebug'
-require 'json'
-require 'active_support/core_ext/object/to_param'
+require "byebug"
+require "json"
+require "active_support/core_ext/object/to_param"
 
-API_VERSION          = '8'
-API_URI              = 'https://api.ring.com'
-NEW_SESSION_ENDPOINT = '/clients_api/session'
-DINGS_ENDPOINT       = '/clients_api/dings/active'
-DEVICES_ENDPOINT     = '/clients_api/devices'
+API_VERSION          = "8".freeze
+API_URI              = "https://api.ring.com".freeze
+NEW_SESSION_ENDPOINT = "/clients_api/session".freeze
+DINGS_ENDPOINT       = "/clients_api/dings/active".freeze
+DEVICES_ENDPOINT     = "/clients_api/devices".freeze
 
 class Ring
   def initialize(username:, password:)
@@ -26,7 +26,6 @@ class Ring
 
     request = Net::HTTP::Post.new(uri.path)
     request.body = post_data.to_param
-    debugger
     result = https.request request
     exit unless result.code == "201"
   end
@@ -56,10 +55,9 @@ class Ring
     request.body = post_data.to_param
     request.basic_auth @username, @password
 
-
     result = https.request request
     exit unless result.code == "201"
-    authentication_token =  JSON.parse(result.body)['profile']['authentication_token']
+    authentication_token =  JSON.parse(result.body)["profile"]["authentication_token"]
     @authentication_token = authentication_token
   end
 end
