@@ -1,4 +1,5 @@
 require "byebug"
+require "httparty"
 require "json"
 require "active_support/core_ext/object/to_param"
 
@@ -15,28 +16,31 @@ class Ring
     @authentication_token = nil
   end
 
-  def dings
-    uri = URI.parse(API_URI + DINGS_ENDPOINT)
+  def devices
+    devices_url = API_URI + DEVICES_ENDPOINT
     params = {
       "api_version" => API_VERSION,
       "auth_token" => @authentication_token
     }
-    encoded_params = URI.encode_www_form(params)
-    http = Net::HTTP.new(uri.host, uri.port)
 
-    request = Net::HTTP::Get.new(uri)
-    result http.request request
+    http = HTTParty.get(devices_url, query: params)
+    exit unless http.code == 200
+    http.body
+  end
 
-    debugger
-    exit unless result.code == "200"
-    puts 'hi'
+  def dings
+    dings_url = API_URI + DINGS_ENDPOINT
+    params = {
+      "api_version" => API_VERSION,
+      "auth_token" => @authentication_token
+    }
+
+    http = HTTParty.get(dings_url, query: params)
+    exit unless http.code == 200
+    http.body
   end
 
   def authenticate
-    uri = URI.parse(API_URI + NEW_SESSION_ENDPOINT)
-    https = Net::HTTP.new(uri.host, uri.port)
-    https.use_ssl = true
-
     post_data = {
       "device[os]" => "android",
       "device[hardware_id]" => "hardware_id",
@@ -53,13 +57,12 @@ class Ring
       "api_version" => API_VERSION
     }
 
-    request = Net::HTTP::Post.new(uri.path)
-    request.body = post_data.to_param
-    request.basic_auth @username, @password
+    new_session_url = API_URI + NEW_SESSION_ENDPOINT
+    auth = {username: @username, password: @password}
+    http = HTTParty.post(new_session_url, query: post_data, basic_auth: auth)
 
-    result = https.request request
-    exit unless result.code == "201"
-    authentication_token =  JSON.parse(result.body)["profile"]["authentication_token"]
+    exit unless http.code == 201
+    authentication_token =  JSON.parse(http.body)["profile"]["authentication_token"]
     puts "Authenticated"
     @authentication_token = authentication_token
   end
