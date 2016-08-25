@@ -2,14 +2,37 @@ require 'byebug'
 require 'json'
 require 'active_support/core_ext/object/to_param'
 
+API_VERSION          = '8'
+API_URI              = 'https://api.ring.com'
+NEW_SESSION_ENDPOINT = '/clients_api/session'
+DINGS_ENDPOINT       = '/clients_api/dings/active'
+DEVICES_ENDPOINT     = '/clients_api/devices'
+
 class Ring
   def initialize(username:, password:)
     @username = username
     @password = password
+    @auth_token = nil
+  end
+
+  def dings
+    uri = URI.parse(API_URI + DINGS_ENDPOINT)
+    https = Net::HTTP.new(uri.host, uri.port)
+    https.use_ssl = true
+    post_data = {
+      "api_version" => API_VERSION,
+      "auth_token" => @auth_token
+    }
+
+    request = Net::HTTP::Post.new(uri.path)
+    request.body = post_data.to_param
+    debugger
+    result = https.request request
+    exit unless result.code == "201"
   end
 
   def authenticate
-    uri = URI.parse('https://api.ring.com/clients_api/session')
+    uri = URI.parse(API_URI + NEW_SESSION_ENDPOINT)
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
 
@@ -26,7 +49,7 @@ class Ring
       "device[metadata][is_tablet]" => "true",
       "device[metadata][linphone_initialized]" => "true",
       "device[metadata][language]" => "en",
-      "api_version" => "8"
+      "api_version" => API_VERSION
     }
 
     request = Net::HTTP::Post.new(uri.path)
@@ -37,7 +60,6 @@ class Ring
     result = https.request request
     exit unless result.code == "201"
     authentication_token =  JSON.parse(result.body)['profile']['authentication_token']
-    puts "Authenticated: #{authentication_token}"
-
+    @authentication_token = authentication_token
   end
 end
