@@ -1,6 +1,4 @@
-require "byebug"
 require "httparty"
-require "json"
 require "active_support/core_ext/object/to_param"
 
 API_VERSION          = "8".freeze
@@ -43,6 +41,7 @@ class Ring
   end
 
   def authenticate
+    new_session_url = API_URI + NEW_SESSION_ENDPOINT
     post_data = {
       "device[os]" => "android",
       "device[hardware_id]" => "hardware_id",
@@ -59,15 +58,13 @@ class Ring
       "api_version" => API_VERSION
     }
 
-    new_session_url = API_URI + NEW_SESSION_ENDPOINT
-    auth = {username: @username, password: @password}
+    auth = { username: @username, password: @password }
     http = HTTParty.post(new_session_url, query: post_data, basic_auth: auth)
-
     unless http.code == 201
       puts "Could not authenticate. Have you set credentials in scripts/example.rb ?"
       exit
     end
-    authentication_token =  JSON.parse(http.body)["profile"]["authentication_token"]
+    authentication_token = JSON.parse(http.body)["profile"]["authentication_token"]
     puts "Authenticated"
     @authentication_token = authentication_token
   end
