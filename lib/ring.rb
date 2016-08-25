@@ -7,7 +7,7 @@ API_VERSION          = "8".freeze
 API_URI              = "https://api.ring.com".freeze
 NEW_SESSION_ENDPOINT = "/clients_api/session".freeze
 DINGS_ENDPOINT       = "/clients_api/dings/active".freeze
-DEVICES_ENDPOINT     = "/clients_api/devices".freeze
+DEVICES_ENDPOINT     = "/clients_api/ring_devices".freeze
 
 class Ring
   def initialize(username:, password:)
@@ -25,6 +25,7 @@ class Ring
 
     http = HTTParty.get(devices_url, query: params)
     exit unless http.code == 200
+    puts "success: #{devices_url}"
     http.body
   end
 
@@ -37,6 +38,7 @@ class Ring
 
     http = HTTParty.get(dings_url, query: params)
     exit unless http.code == 200
+    puts "success: #{dings_url}"
     http.body
   end
 
@@ -61,7 +63,10 @@ class Ring
     auth = {username: @username, password: @password}
     http = HTTParty.post(new_session_url, query: post_data, basic_auth: auth)
 
-    exit unless http.code == 201
+    unless http.code == 201
+      puts "Could not authenticate. Have you set credentials in scripts/example.rb ?"
+      exit
+    end
     authentication_token =  JSON.parse(http.body)["profile"]["authentication_token"]
     puts "Authenticated"
     @authentication_token = authentication_token
